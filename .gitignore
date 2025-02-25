@@ -4,3 +4,5 @@ study/*
 *DS_Store
 *log
 .gitignore
+
+logs/*

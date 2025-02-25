@@ -7,9 +7,22 @@ apt-get -y install \
 mariadb-server \
 vim
 
-sed -i "s/bind-address/#bind-address/" /etc/mysql/mariadb.conf.d/50-server.cnf
 sed -i "s/password =/password = $MARIADB_ROOT_PWD/g" /etc/mysql/debian.cnf
 
+mysqld_safe &
+
+counter=0
+while [ ! -S /run/mysqld/mysqld.sock ]; do
+  echo "Waiting for mysqld to be ready..."
+  sleep 2
+  counter=$((counter+2))
+  if [ $counter -gt 15 ]; then
+    echo "mysqld did not start within 30 seconds."
+    exit 1
+  fi
+done
+
+echo "mysqld is up; executing SQL initialization commands..."
 echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MARIADB_ROOT_PWD}';" | mysql -uroot -p$MARIADB_ROOT_PWD
 echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE;" | mysql -uroot -p$MARIADB_ROOT_PWD
 echo "CREATE USER IF NOT EXISTS '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PWD';" | mysql -uroot -p$MARIADB_ROOT_PWD
@@ -19,9 +32,6 @@ echo "GRANT ALL PRIVILEGES ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' IDENTIF
 echo "GRANT ALL PRIVILEGES ON $MARIADB_DATABASE.* TO '$WORDPRESS_DB_USER'@'%' IDENTIFIED BY '$WORDPRESS_DB_PWD';" | mysql -uroot -p$MARIADB_ROOT_PWD
 echo "FLUSH PRIVILEGES;" | mysql -uroot -p$MARIADB_ROOT_PWD
 
-echo mysql error log
-cat ls
-cat ls ../
-cat /var/log/mysql/error.log
+
 echo finish setting mariaDB
 exec "$@"
