@@ -1,2 +1,6 @@
 study/*
 
+.vscode
+*DS_Store
+*log
+.gitignore
