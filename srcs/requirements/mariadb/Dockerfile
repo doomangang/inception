@@ -1,18 +1,28 @@
+# Use Alpine as the base image
 FROM alpine:3.20
 
-RUN apk update && \
-  apk add --no-cache \
-  mariadb mariadb-client
+# Set environment variables
+ENV MARIADB_DATA_DIR=/var/lib/mysql
 
-COPY ./conf/mariadb-server.cnf /etc/my.cnf.d/mariadb-server.cnf
+# Install MariaDB
+RUN apk update && apk add --no-cache \
+    mariadb mariadb-client && \
+    mkdir -p "$MARIADB_DATA_DIR" && \
+    chown -R mysql:mysql "$MARIADB_DATA_DIR" && \
+    mysql_install_db --user=mysql --datadir="$MARIADB_DATA_DIR"
 
-# COPY ./tools/entrypoint.sh /
-# RUN chmod +x /entrypoint.sh
-# ENTRYPOINT ["/entrypoint.sh"]
+# Prepare runtime directories
+RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
 
+# Configure MariaDB
+COPY ./conf/my.cnf /etc/my.cnf
+
+# Add initialization script
+COPY ./tools/init.sh /init.sh
+RUN chmod +x /init.sh
+
+# Expose the MariaDB port
 EXPOSE 3306
-STOPSIGNAL SIGQUIT
 
-VOLUME ["/var/lib/mysql"]
-
-CMD ["mysqld"]
+# Initialize and start MariaDB
+CMD ["/init.sh"]

@@ -19,7 +19,7 @@ services:
       container_name: mariadb
       build: ./requirements/mariadb
       image: mariadb:42
-      restart: always
+      restart: on-failure
       # image: debian:bullseye
       expose:
         - "3306"
@@ -31,38 +31,60 @@ services:
         - .env
       tty: true
       # init: true
+      healthcheck:
+        test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 30s
 
     # nginx:
     #   container_name: nginx
     #   build: ./requirements/nginx
     #   image: nginx:42
-    #   restart: always
+    #   restart: on-failure
     #   ports:
     #     - "443:443"
     #   volumes:
     #     - website:/var/www/html
     #   networks:
     #     - inception
+    #   depends_on:
+    #     - mariadb
+    #     - wordpress
     #   env_file:
     #     - .env
     #   tty: true
-    #   init: true
+    #   # init: true
+    #   healthcheck:
+    #     test: ["CMD", "nginx", "-t"]
+    #     interval: 30s
+    #     timeout: 10s
+    #     retries: 3
+    #     start_period: 30s
 
-    # wordpress:
-    #   container_name: wordpress
-    #   image: debian:bullseye
-    #   # build: ./requirements/wordpress
-    #   # image: wordpress:42
-    #   restart: always
-    #   volumes:
-    #     - website:/var/www/html
-    #   expose: 
-    #     - "9000"
-    #   networks:
-    #     - inception
-    #   env_file:
-    #     - .env
-    #   tty: true
+    wordpress:
+      container_name: wordpress
+      build: ./requirements/wordpress
+      image: wordpress:42
+      restart: on-failure
+      depends_on: 
+        - mariadb
+      volumes:
+        - website:/var/www/html
+      expose: 
+        - "9000"
+      networks:
+        - inception
+      env_file:
+        - .env
+      tty: true
+      healthcheck:
+        test: ["CMD", "php-fpm82", "-t"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 30s
     #   # init: true
 
 networks:

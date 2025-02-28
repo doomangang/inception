@@ -1,17 +1,19 @@
-FROM debian:bullseye
+FROM alpine:3.20
 
-RUN apt-get -y update && apt-get -y upgrade && \
-	apt-get -y install nginx &&\
-	apt-get -y install openssl 
+RUN apk add --no-cache \
+		nginx \
+		openssl \
+		apache2-utils \
+		curl \
+		shadow
 
-RUN openssl	req -x509 -nodes -days 365 -newkey rsa:2048 \
-		-keyout /etc/ssl/nginx.key \
-		-out /etc/ssl/nginx.crt \
-		-subj "/C=KR/ST=Seoul/L=Gaepo-dong/O=42Seoul/OU=./CN=jihyjeon.42.fr/emailAddress=jihyjeon@student.42seoul.kr"
+RUN mkdir -p /var/www/html && \
+	chown -R nginx:www-data /var/www/html
 
-COPY ./conf/default etc/nginx/sites-enabled/default
-# COPY ./tools/entrypoint.sh /entrypoint.sh
-# COPY ./conf/default /var/www/html/default
-# RUN chmod +x /entrypoint.sh
-# ENTRYPOINT ["/entrypoint.sh"]
-CMD [ "nginx", "-g", "daemon off;" ]
+RUN	usermod -aG www-data nginx
+
+# Copy the initialization script
+COPY --chown=nginx:nginx ./tools/init.sh /init.sh
+RUN chmod +x /init.sh
+
+ENTRYPOINT ["/init.sh"]

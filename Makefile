@@ -13,15 +13,15 @@ ps:
 
 log:
 	docker logs mariadb > logs/mariadb_log_$(TIMESTAMP).log
-	docker logs nginx > logs/nginx_log_$(TIMESTAMP).log
 	docker logs wordpress > logs/wp_log_$(TIMESTAMP).log
+	docker logs nginx > logs/nginx_log_$(TIMESTAMP).log
 clean:
 	docker-compose -f $(COMPOSE) down
 
 fclean:
+	rm -rf ${VOLUME}
 	docker-compose -f $(COMPOSE) down --rmi all
 	docker volume rm $$(docker volume ls -f dangling=true -q)
-	rm -rf ${VOLUME}
 
 prune:
 	docker system prune --all --volumes
