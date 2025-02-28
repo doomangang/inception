@@ -1,12 +1,18 @@
-FROM debian:bullseye
+FROM alpine:3.20
 
-RUN apt-get -y update && apt-get -y upgrade && apt-get -y install mariadb-server && apt-get -y install vim
+RUN apk update && \
+  apk add --no-cache \
+  mariadb mariadb-client
 
-COPY ./tools/50-server.cnf /etc/mysql/mariadb.conf.d
-# COPY ./tools/entrypoint.sh /entrypoint.sh
+COPY ./conf/mariadb-server.cnf /etc/my.cnf.d/mariadb-server.cnf
+
+# COPY ./tools/entrypoint.sh /
 # RUN chmod +x /entrypoint.sh
-# ENTRYPOINT [ "/entrypoint.sh" ]
-COPY ./tools/createdb.sql /
-RUN service mariadb start && mariadb < createdb.sql
-RUN rm -f createdb.sql
-CMD ["mysqld_safe"]
+# ENTRYPOINT ["/entrypoint.sh"]
+
+EXPOSE 3306
+STOPSIGNAL SIGQUIT
+
+VOLUME ["/var/lib/mysql"]
+
+CMD ["mysqld"]

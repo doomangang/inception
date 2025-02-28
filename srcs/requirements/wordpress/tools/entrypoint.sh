@@ -5,7 +5,7 @@ echo Wordpress getting set...
 apt-get -y update &&
 apt-get -y upgrade &&
 apt-get -y install \
-php7.3 \
+php7.4 \
 php-fpm \
 php-cli \
 wget \
@@ -16,9 +16,9 @@ php-xml \
 sendmail \
 vim
 
-service php7.3-fpm start;
+service php7.4-fpm start;
 apt-get -y install mariadb-client
-sed -i 's/listen = \/run\/php\/php7.3-fpm.sock/listen = 0.0.0.0:9000/g' /etc/php/7.3/fpm/pool.d/www.conf
+sed -i 's/listen = \/run\/php\/php7.4-fpm.sock/listen = 0.0.0.0:9000/g' /etc/php/7.4/fpm/pool.d/www.conf
 
 if [ ! -f /var/www/html/wp-config.php ]; then
   curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
@@ -26,11 +26,11 @@ if [ ! -f /var/www/html/wp-config.php ]; then
   mv wp-cli.phar /usr/local/bin/wp
 
   wp core download --allow-root --path=/var/www/html/
-  wp core config --dbname=$WORDPRESS_DB_NAME --dbuser=$WORDPRESS_DB_USER --dbpass=$WORDPRESS_DB_PWD --dbhost=$WORDPRESS_DB_HOST --dbprefix=wp_ --allow-root --path=/var/www/html/
-  wp core install --url=https://$DOMAIN_NAME --title="jihyjeon's inception" --admin_user=$ADMIN_NAME --admin_password=$ADMIN_PWD --admin_email=$ADMIN_EMAIL --allow-root --path=/var/www/html/
-  wp user create "$USER_NAME" "$USER_EMAIL" --role=subscriber --user_pass="$USER_PWD" --allow-root --path=/var/www/html/
+  wp core config --dbname=wp_db --dbuser=jihyjeon --dbpass=jihyjeon --dbhost=jihyjeon --dbprefix=wp_ --allow-root --path=/var/www/html/
+  wp core install --url=https://jihyjeon.42.fr --title="jihyjeon's inception" --admin_user=jihyjeon --admin_password=jihyjeon --admin_email=jihyjeon@student.42seoul.kr --allow-root --path=/var/www/html/
+  wp user create "mandoo" "sp0943@cau.ac.kr" --role=subscriber --user_pass="mandoo" --allow-root --path=/var/www/html/
 fi
  
-service php7.3-fpm stop;
+service php7.4-fpm stop;
 echo Wordpress setting finished!
 exec "$@"
